@@ -19,7 +19,7 @@ app.engine('.hbs', expressHbs({
 }));
 
 app.get('/', (req, res) => {
-    res.render('index', {name: 'Volodymyr'})
+    res.render('index', {name: 'Volodymyr'});
 });
 
 app.get('/ping', (req, res) => {
