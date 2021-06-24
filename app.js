@@ -33,11 +33,10 @@ app.post('/login', async (req, res) => {
     const findUser = await checkInputedData(login,password,allUsers);
     if (findUser){
         console.log(34, findUser);
+        res.redirect('/user');
     }
     if(!findUser){
-        res.redirect('/error', function (req, res) {
-            res.send('This login exist in system');
-        });
+        res.redirect('/error');
     }
 
 
@@ -45,7 +44,9 @@ app.post('/login', async (req, res) => {
 app.get('/error', (req, res) => {
     res.render('error');
 });
-
+app.get('/user', (req, res) => {
+    res.render('user');
+});
 
 app.get('/register', async (req, res) => {
     const {login, password} = req.body;
@@ -61,9 +62,7 @@ app.get('/register', async (req, res) => {
 });
 
 
-app.get('/users', (req, res) => {
-    res.json('users');
-});
+
 
 
 function _wrUserToDataBase(user) {
