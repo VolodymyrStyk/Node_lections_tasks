@@ -5,9 +5,30 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="style/style.css">
     <title>Error</title>
 </head>
 <body>
-    <h1>Error</h1>
+    <div class="container error">
+        <h1>Error</h1>
+        <h3><i>{{errorMessage}}</i></h3>
+        <div>
+            <a href="/login">
+                <button>Login</button>
+            </a>
+        </div>
+        <br>
+        <div>
+            <a href="/register">
+                <button>Register</button>
+            </a>
+        </div>
+        <br>
+        <div>
+            <a href="/">
+                <button>Go to Main</button>
+            </a>
+        </div>
+    </div>
 </body>
 </html>

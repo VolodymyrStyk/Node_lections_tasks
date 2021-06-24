@@ -1,6 +1,6 @@
 const express = require('express');
 const expressHbs = require('express-handlebars');
-const fs = require('fs');
+const fs = require('fs/promises');
 const path = require('path');
 
 const app = express();
@@ -21,7 +21,7 @@ app.engine('.hbs', expressHbs({
 }));
 
 app.get('/', (req, res) => {
-    res.render('index', {name: 'User'});
+    res.render('index');
 });
 
 app.get('/login', (req, res) => {
@@ -30,106 +30,93 @@ app.get('/login', (req, res) => {
 
 app.post('/login', async (req, res) => {
     const {login, password} = req.body;
-    const checkUser =
+    const dataDB = await fs.readFile(dBPath, 'utf-8');
+    const users = JSON.parse(dataDB)
+    const findUser = users.find(({login: existLogin, password: existPassword}) => {
+        return existLogin === login && existPassword === password;
+    });
 
-});
-app.get('/error', (req, res) => {
-    res.render('error');
-});
-app.get('/user', (req, res) => {
-    res.render('user');
-});
-
-app.get('/register', async (req, res) => {
-    const {login, password} = req.body;
-    const newUserExist = await _isNewUser(login);
-
-    if (newUserExist) {
-        res.redirect('/error', function (req, res) {
-            res.send('This login exist in system');
-        });
+    if (findUser) {
+        const index = users.indexOf(findUser);
+        res.redirect(`/users/${index}`);
     }
-    console.log(33, newUserExist);
-    console.log(login, newUserExist);
+
+    if (!findUser) {
+        const error = 1;
+        res.redirect(`/error/${error}`);
+    }
 });
 
+app.get('/users/:id', async (req, res) => {
+    const {id} = req.params;
+    const dataDB = await fs.readFile(dBPath, 'utf-8');
+    const users = JSON.parse(dataDB);
+    const {login} = users[id];
 
-function _wrUserToDataBase(user) {
-    return new Promise(resolve => {
-        let response;
-        fs.readFile(dBPath, (err, data) => {
-            if (err) {
-                console.log('* -Can not read File: ', err);
-                return;
-            }
-            const users = (!data || data.toString() === '') ? _dataInit() : JSON.parse(data);
-            const isExist = _checkUser(users, user.login);
-            console.log('wr ' + isExist);
-            if (!isExist) {
-                fs.writeFile(dBPath, JSON.stringify(users), (err) => {
-                    if (err) {
-                        console.log(57, err);
-                    }
-                });
-                response = 'User EXIST NOK';
-            }
-            if (isExist) {
-                response = 'Hello New User';
-            }
-        })
-        return response;
-    })
-}
-
-async function _checkUser(login) {
-
-
-}
-
-
-function _isNewUser(inputLogin) {
-    return new Promise((resolve, reject) => {
-        fs.readFile(dBPath, (err, data) => {
-            if (err) {
-                reject(err);
-            }
-            const users = !data || data.toString() === '' ? _dataInit() : JSON.parse(data);
-            let loginExist = false;
-            users.forEach(({login}) => {
-                if (login === inputLogin) {
-                    loginExist = true;
-                }
-            });
-            resolve(loginExist);
-        })
-    })
-}
-
-
-app.get('/ping', (req, res) => {
-    res.end('pong');
+    res.render('user', {login});
 });
 
-function _dataInit() {
-    return [{"login": "login", "password": "password"}];
-}
+app.get('/users', async (req, res) => {
+    const dataDB = await fs.readFile(dBPath, 'utf-8');
+    const users = JSON.parse(dataDB);
 
-function checkInputedData(login = '', pass = '', allUsers = []) {
-    return new Promise((resolve, reject) => {
-        const found = allUsers.find(exist => (exist.login === login && exist.password === pass));
-        resolve(found);
-    })
-}
+    res.render('users', {users});
+});
 
+app.get('/register', (req, res) => {
+    res.render('register');
+});
 
-function getUsersDB() {
-    return new Promise((resolve, reject) => {
-        fs.readFile(dBPath, (err, data) => {
-            if (err) {
-                reject(err);
-            }
-            const users = !data || data.toString() === '' ? _dataInit() : JSON.parse(data);
-            resolve(users);
-        })
-    })
-}
+app.post('/register', async (req, res) => {
+    const body = req.body;
+    const {login, password} = body;
+    const dataDB = await fs.readFile(dBPath, 'utf-8');
+    const users = JSON.parse(dataDB)
+    const findUser = users.find(({login: existLogin, password: existPassword}) => {
+        return existLogin === login && existPassword === password;
+    });
+
+    if (findUser) {
+        const error = 2;
+        res.redirect(`/error/${error}`);
+    }
+    if (!findUser) {
+        if (!login) {
+            const error = 3;
+            res.redirect(`/error/${error}`);
+            return;
+        }
+        if (!password) {
+            const error = 4;
+            res.redirect(`/error/${error}`);
+            return;
+        }
+        users.push(body);
+        const writeData = await fs.writeFile(dBPath, JSON.stringify(users), 'utf-8');
+        const index = users.length - 1;
+        res.redirect(`/users/${index}`);
+    }
+});
+
+app.get('/error/:id', (req, res) => {
+    const {id} = req.params;
+    let errorMessage = '';
+
+    switch (id) {
+        case '1':
+            errorMessage = 'Not found user, you can try register or use another login!';
+            break;
+        case '2':
+            errorMessage = 'This login exist, please chose another login!';
+            break;
+        case '3':
+            errorMessage = 'Login can not be EMPTY!';
+            break;
+        case '4':
+            errorMessage = 'Password can not be EMPTY!';
+            break;
+        default:
+    }
+
+    res.render('error', {errorMessage});
+});

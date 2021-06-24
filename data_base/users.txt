@@ -1,1 +1,1 @@
-[{"login":"login","password":"password"},{"login":"sdfad","password":"asdasd"}]
+[{"login":"login","password":"password"},{"login":"admin","password":"admin"},{"login":"root","password":"root"},{"login":"qwe","password":"qwe"},{"login":"qwerty","password":"qwerty"}]
