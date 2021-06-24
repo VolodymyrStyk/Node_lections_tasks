@@ -27,18 +27,10 @@ app.get('/', (req, res) => {
 app.get('/login', (req, res) => {
     res.render('login');
 });
+
 app.post('/login', async (req, res) => {
     const {login, password} = req.body;
-    const allUsers = await getUsersDB();
-    const findUser = await checkInputedData(login,password,allUsers);
-    if (findUser){
-        console.log(34, findUser);
-        res.redirect('/user');
-    }
-    if(!findUser){
-        res.redirect('/error');
-    }
-
+    const checkUser =
 
 });
 app.get('/error', (req, res) => {
@@ -60,9 +52,6 @@ app.get('/register', async (req, res) => {
     console.log(33, newUserExist);
     console.log(login, newUserExist);
 });
-
-
-
 
 
 function _wrUserToDataBase(user) {
@@ -125,9 +114,9 @@ function _dataInit() {
     return [{"login": "login", "password": "password"}];
 }
 
-function checkInputedData(login='',pass='',allUsers=[]){
+function checkInputedData(login = '', pass = '', allUsers = []) {
     return new Promise((resolve, reject) => {
-        const found = allUsers.find(exist => (exist.login === login && exist.password === pass ));
+        const found = allUsers.find(exist => (exist.login === login && exist.password === pass));
         resolve(found);
     })
 }
