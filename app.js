@@ -21,65 +21,127 @@ app.engine('.hbs', expressHbs({
 }));
 
 app.get('/', (req, res) => {
-    res.render('login');
+    res.render('index', {name: 'User'});
 });
 
-app.post('/', async (req, res) => {
-    const response = await _wrUserToDataBase(req.body);
-    await console.log(response);
-    await res.json(response);
-});
-app.get('/register', (req, res) => {
-    res.json('register');
-});
 app.get('/login', (req, res) => {
-    res.json('login');
+    res.render('login');
 });
+app.post('/login', async (req, res) => {
+    const {login, password} = req.body;
+    const allUsers = await getUsersDB();
+    const findUser = await checkInputedData(login,password,allUsers);
+    if (findUser){
+        console.log(34, findUser);
+    }
+    if(!findUser){
+        res.redirect('/error', function (req, res) {
+            res.send('This login exist in system');
+        });
+    }
+
+
+});
+app.get('/error', (req, res) => {
+    res.render('error');
+});
+
+
+app.get('/register', async (req, res) => {
+    const {login, password} = req.body;
+    const newUserExist = await _isNewUser(login);
+
+    if (newUserExist) {
+        res.redirect('/error', function (req, res) {
+            res.send('This login exist in system');
+        });
+    }
+    console.log(33, newUserExist);
+    console.log(login, newUserExist);
+});
+
+
 app.get('/users', (req, res) => {
     res.json('users');
 });
 
 
 function _wrUserToDataBase(user) {
-    let response;
-    fs.readFile(dBPath, (err, data) => {
-        if (err) {
-            console.log('* -Can not read File: ', err);
-            return;
-        }
-        const users = (!data || data.toString() === '') ? _dataInit() : JSON.parse(data);
-        const isExist = _checkUser(users, user.login);
-        console.log('wr '+isExist);
-        if(!isExist){
-            fs.writeFile(dBPath, JSON.stringify(users), (err) => {
-                if (err) {
-                    console.log(57, err);
-                }
-            });
-            response = 'User EXIST NOK';
-        }
-        if(isExist){
-            response = 'Hello New User';
-        }
+    return new Promise(resolve => {
+        let response;
+        fs.readFile(dBPath, (err, data) => {
+            if (err) {
+                console.log('* -Can not read File: ', err);
+                return;
+            }
+            const users = (!data || data.toString() === '') ? _dataInit() : JSON.parse(data);
+            const isExist = _checkUser(users, user.login);
+            console.log('wr ' + isExist);
+            if (!isExist) {
+                fs.writeFile(dBPath, JSON.stringify(users), (err) => {
+                    if (err) {
+                        console.log(57, err);
+                    }
+                });
+                response = 'User EXIST NOK';
+            }
+            if (isExist) {
+                response = 'Hello New User';
+            }
+        })
+        return response;
     })
-    return response;
 }
 
-function _checkUser(users = [], newUserLogin) {
-    let response = true;
-    users.forEach(({login}) => {
-        if (login === newUserLogin) {
-            console.log('func - Exist');
-            response = false;
-        }
-    })
-    return response;
+async function _checkUser(login) {
+
+
 }
+
+
+function _isNewUser(inputLogin) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(dBPath, (err, data) => {
+            if (err) {
+                reject(err);
+            }
+            const users = !data || data.toString() === '' ? _dataInit() : JSON.parse(data);
+            let loginExist = false;
+            users.forEach(({login}) => {
+                if (login === inputLogin) {
+                    loginExist = true;
+                }
+            });
+            resolve(loginExist);
+        })
+    })
+}
+
+
+app.get('/ping', (req, res) => {
+    res.end('pong');
+});
 
 function _dataInit() {
     return [{"login": "login", "password": "password"}];
 }
 
-app.get('/ping', (req, res) => {
-    res.end('pong');
-});
+function checkInputedData(login='',pass='',allUsers=[]){
+    return new Promise((resolve, reject) => {
+        const found = allUsers.find(exist => (exist.login === login && exist.password === pass ));
+        resolve(found);
+    })
+}
+
+
+function getUsersDB() {
+    return new Promise((resolve, reject) => {
+        fs.readFile(dBPath, (err, data) => {
+            if (err) {
+                reject(err);
+            }
+            const users = !data || data.toString() === '' ? _dataInit() : JSON.parse(data);
+            resolve(users);
+        })
+    })
+}
