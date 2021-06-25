@@ -73,7 +73,7 @@ app.post('/register', async (req, res) => {
     const dataDB = await fs.readFile(dBPath, 'utf-8');
     const users = JSON.parse(dataDB)
     const findUser = users.find(({login: existLogin, password: existPassword}) => {
-        return existLogin === login && existPassword === password;
+        return existLogin === login;
     });
 
     if (findUser) {
